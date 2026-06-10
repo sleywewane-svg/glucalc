@@ -1,7 +1,7 @@
 {
   "name": "Glucides+",
   "short_name": "Glucides+",
-  "description": "Calculateur de glucides avec recherche d'aliments et produits.",
+  "description": "Calculateur de glucides avec recherche d'aliments, produits et aliments personnalisés.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f7f6f2",

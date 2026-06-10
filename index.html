@@ -204,7 +204,9 @@
         </div>
       </aside>
     </section>
-       <section class="card" style="margin-top:1rem;">
+
+    <!-- SECTION ALIMENT PERSONNALISÉ -->
+    <section class="card" style="margin-top:1rem;">
       <h2>Aliment personnalisé</h2>
       <p class="muted">
         Ajoute un aliment qui n’existe pas dans la base. Il sera enregistré dans ton navigateur.
@@ -236,7 +238,7 @@
         <button class="btn btn-primary" id="saveCustomBtn">Enregistrer cet aliment</button>
       </div>
       <p class="meta" id="customFeedback"></p>
-    </section> 
+    </section>
   </main>
 
   <script>
@@ -270,6 +272,20 @@
       { name:'glace vanille', carbsPer100g:24, carbsPerPortion:26, portionGrams:110 }
     ];
 
+    let customFoods = [];
+
+    (function loadCustomFoods(){
+      try {
+        const raw = localStorage.getItem('glucides_custom_foods');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) customFoods = parsed;
+        }
+      } catch(e) {
+        customFoods = [];
+      }
+    })();
+
     const state = { selected:null, searchResults:[], meal:[] };
     const $ = id => document.getElementById(id);
     function norm(v){return (v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();}
@@ -287,11 +303,16 @@
       el.textContent=text;
     }
     function searchLocal(query){
-      const q=norm(query);
-      return localFoods
+      const q = norm(query);
+      const fromBase = localFoods
         .filter(f => [f.name,...(f.aliases||[])].map(norm).join(' ').includes(q))
-        .map(f => ({...f, source:'Base locale'}))
-        .slice(0,10);
+        .map(f => ({...f, source:'Base locale'}));
+
+      const fromCustom = customFoods
+        .filter(f => norm(f.name).includes(q))
+        .map(f => ({...f, source:'Perso'}));
+
+      return [...fromCustom, ...fromBase].slice(0, 10);
     }
     async function searchOpenFoodFacts(query){
       const url=`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=12&fields=product_name,brands,nutriments,serving_size`;
@@ -392,6 +413,66 @@
         renderResult();
       }
     }
+    function saveCustomFood(){
+      const name = $('customName').value.trim();
+      const carbs = Number($('customCarbs').value);
+      const base = $('customBase').value;
+      const portionGrams = Number($('customPortion').value);
+      const feedback = $('customFeedback');
+
+      if (!name || !carbs || carbs < 0) {
+        feedback.textContent = 'Remplis au moins le nom et les glucides.';
+        feedback.className = 'meta danger';
+        return;
+      }
+
+      let carbsPer100g = carbs;
+      let carbsPerPortion;
+      let portion;
+
+      if (base === '100g') {
+        carbsPer100g = carbs;
+        if (portionGrams > 0) {
+          carbsPerPortion = carbsPer100g * portionGrams / 100;
+          portion = portionGrams;
+        }
+      } else { // base = portion
+        carbsPerPortion = carbs;
+        if (portionGrams > 0) {
+          portion = portionGrams;
+          carbsPer100g = carbs * 100 / portionGrams;
+        } else {
+          carbsPer100g = carbs; // fallback
+        }
+      }
+
+      const food = {
+        name,
+        carbsPer100g,
+        carbsPerPortion,
+        portionGrams: portion,
+        aliases: []
+      };
+
+      customFoods.unshift(food);
+      try {
+        localStorage.setItem('glucides_custom_foods', JSON.stringify(customFoods));
+      } catch(e) { }
+
+      feedback.textContent = `“${name}” enregistré dans tes aliments persos.`;
+      feedback.className = 'meta ok';
+
+      const queryInput = $('query');
+      if (queryInput) queryInput.value = name;
+
+      state.selected = food;
+      renderResult();
+
+      $('customName').value = '';
+      $('customCarbs').value = '';
+      $('customPortion').value = '';
+    }
+
     document.addEventListener('click', e=>{
       const select=e.target.closest('[data-select]');
       const remove=e.target.closest('[data-remove]');
@@ -415,6 +496,9 @@
     $('qty').addEventListener('input', renderResult);
     $('unit').addEventListener('change', renderResult);
     $('query').addEventListener('keydown', e=>{ if(e.key==='Enter') runSearch(); });
+
+    const saveBtn = document.getElementById('saveCustomBtn');
+    if (saveBtn) saveBtn.addEventListener('click', saveCustomFood);
 
     let theme=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
     document.documentElement.setAttribute('data-theme',theme);

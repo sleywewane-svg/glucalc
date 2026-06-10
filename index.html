@@ -204,6 +204,39 @@
         </div>
       </aside>
     </section>
+       <section class="card" style="margin-top:1rem;">
+      <h2>Aliment personnalisé</h2>
+      <p class="muted">
+        Ajoute un aliment qui n’existe pas dans la base. Il sera enregistré dans ton navigateur.
+      </p>
+      <div class="row">
+        <div class="field">
+          <label for="customName">Nom du plat / aliment</label>
+          <input id="customName" placeholder="Ex : tacos maison" />
+        </div>
+        <div class="field">
+          <label for="customCarbs">Glucides</label>
+          <input id="customCarbs" type="number" min="0" step="0.1" placeholder="Ex : 25" />
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="customBase">Base de calcul</label>
+          <select id="customBase">
+            <option value="100g">Pour 100 g</option>
+            <option value="portion">Pour 1 portion</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="customPortion">Poids d'une portion (g, optionnel)</label>
+          <input id="customPortion" type="number" min="1" step="1" placeholder="Ex : 250" />
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" id="saveCustomBtn">Enregistrer cet aliment</button>
+      </div>
+      <p class="meta" id="customFeedback"></p>
+    </section> 
   </main>
 
   <script>

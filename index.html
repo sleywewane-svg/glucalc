@@ -1,11 +1,401 @@
-<!doctype html>
-<html lang="fr">
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Glucides+</title>
+  <meta name="theme-color" content="#01696f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Glucides+" />
+  <meta name="description" content="Calculateur de glucides avec base large aliments et produits." />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="./assets/icon-180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./assets/icon-192.png" />
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <style>
+    :root, [data-theme="light"] {
+      --text-sm: clamp(.875rem,.8rem + .35vw,1rem);
+      --text-base: clamp(1rem,.95rem + .25vw,1.125rem);
+      --text-lg: clamp(1.125rem,1rem + .75vw,1.5rem);
+      --text-xl: clamp(1.8rem,1.1rem + 2vw,2.8rem);
+      --space-2:.5rem; --space-3:.75rem; --space-4:1rem; --space-5:1.25rem; --space-6:1.5rem; --space-8:2rem;
+      --bg:#f7f6f2; --surface:#f9f8f5; --surface-2:#fbfbf9; --border:#d4d1ca; --text:#28251d; --muted:#6d6b66;
+      --primary:#01696f; --primary-hover:#0c4e54; --primary-soft:#cedcd8; --danger:#a12c7b; --success:#437a22;
+      --radius:.95rem; --radius-lg:1.2rem; --shadow:0 12px 28px rgba(0,0,0,.08); --font:'Satoshi', Inter, sans-serif;
+    }
+    [data-theme="dark"] {
+      --bg:#171614; --surface:#1c1b19; --surface-2:#201f1d; --border:#393836; --text:#eee7dc; --muted:#aaa397;
+      --primary:#4f98a3; --primary-hover:#227f8b; --primary-soft:#313b3b; --shadow:0 14px 32px rgba(0,0,0,.28);
+    }
+    *{box-sizing:border-box;margin:0;padding:0} html{-webkit-text-size-adjust:100%}
+    body{
+      font-family:var(--font);
+      background:linear-gradient(180deg,var(--bg),var(--surface));
+      color:var(--text);
+      font-size:var(--text-base);
+      padding:calc(env(safe-area-inset-top) + 1rem) 1rem calc(env(safe-area-inset-bottom) + 1rem);
+      min-height:100dvh
+    }
+    button,input,select{font:inherit;color:inherit} button{cursor:pointer;border:none} img{max-width:100%;display:block}
+    .app{max-width:1180px;margin:0 auto;display:grid;gap:var(--space-6)}
+    .top,.card{
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius-lg);
+      box-shadow:var(--shadow)
+    }
+    .top{
+      padding:var(--space-5);
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:var(--space-4)
+    }
+    .brand{display:flex;gap:var(--space-4);align-items:center}
+    .icon{
+      width:52px;height:52px;border-radius:16px;
+      display:grid;place-items:center;
+      background:var(--primary-soft);color:var(--primary);flex:0 0 auto
+    }
+    .brand h1{font-size:var(--text-xl);line-height:1.02}
+    .muted{color:var(--muted)}
+    .theme{width:44px;height:44px;border-radius:999px;background:var(--surface-2);border:1px solid var(--border)}
+    .layout{display:grid;grid-template-columns:1.15fr .85fr;gap:var(--space-6)}
+    .card{padding:var(--space-5)}
+    .card h2{font-size:var(--text-lg);margin-bottom:var(--space-2)}
+    .field{display:grid;gap:var(--space-2);margin-top:var(--space-4)}
+    label{font-size:var(--text-sm);font-weight:700}
+    input,select{
+      width:100%;
+      padding:.95rem 1rem;
+      border-radius:var(--radius);
+      border:1px solid var(--border);
+      background:var(--surface-2)
+    }
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4)}
+    .actions{display:flex;flex-wrap:wrap;gap:var(--space-3);margin-top:var(--space-5)}
+    .btn{min-height:44px;padding:.85rem 1.1rem;border-radius:999px;font-weight:700}
+    .btn-primary{background:var(--primary);color:#fff}
+    .btn-primary:hover{background:var(--primary-hover)}
+    .btn-secondary{background:var(--surface-2);border:1px solid var(--border)}
+    .results,.meal-total,.source-box,.install-box{
+      margin-top:var(--space-5);
+      padding:var(--space-4);
+      border-radius:var(--radius);
+      background:var(--surface-2);
+      border:1px solid var(--border)
+    }
+    .big{
+      font-size:clamp(2rem,1.2rem + 2vw,3rem);
+      font-weight:700;
+      line-height:1;
+      font-variant-numeric:tabular-nums
+    }
+    .list{display:grid;gap:var(--space-3);margin-top:var(--space-4)}
+    .item,.search-item{
+      display:flex;
+      justify-content:space-between;
+      gap:var(--space-4);
+      align-items:flex-start;
+      padding:var(--space-4);
+      border:1px solid var(--border);
+      background:var(--surface-2);
+      border-radius:var(--radius)
+    }
+    .search-item{width:100%;text-align:left}
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      padding:.25rem .65rem;
+      border-radius:999px;
+      background:var(--primary-soft);
+      color:var(--primary);
+      font-size:.78rem;
+      font-weight:700
+    }
+    .meta{font-size:var(--text-sm);color:var(--muted)}
+    .ok{color:var(--success)} .danger{color:var(--danger)}
+    .install-box ol{padding-left:1.1rem;margin-top:.5rem}
+    .install-box li{margin:.25rem 0}
+    @media (max-width:900px){.layout,.row{grid-template-columns:1fr}}
+  </style>
 </head>
 <body>
-  <h1>Glucides+</h1>
-  <p>Site en place. On rajoutera l’app complète après.</p>
+  <main class="app">
+    <header class="top">
+      <div class="brand">
+        <div class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12c0-4.1 3-7 7-7s7 2.9 7 7-3 7-7 7-7-2.9-7-7Z"/>
+            <path d="M12 5v14"/>
+            <path d="M8.5 8.5c1.1.8 2.2 1.2 3.5 1.2s2.4-.4 3.5-1.2"/>
+            <path d="M8.5 15.5c1.1-.8 2.2-1.2 3.5-1.2s2.4.4 3.5 1.2"/>
+          </svg>
+        </div>
+        <div>
+          <h1>Glucides+</h1>
+          <p class="muted">Calculateur de glucides avec base mixte produits + aliments courants.</p>
+        </div>
+      </div>
+      <button class="theme" id="themeBtn" aria-label="Changer de thème">🌙</button>
+    </header>
+
+    <section class="install-box" id="installBox">
+      <span class="badge">iPhone</span>
+      <p class="meta" style="margin-top:.5rem">
+        Pour l’ajouter à l’écran d’accueil : ouvre cette page dans Safari, touche Partager, puis “Sur l’écran d’accueil”.
+      </p>
+      <ol class="meta">
+        <li>Ouvrir le site dans Safari.</li>
+        <li>Taper sur Partager.</li>
+        <li>Choisir “Sur l’écran d’accueil”.</li>
+      </ol>
+    </section>
+
+    <section class="layout">
+      <section class="card">
+        <h2>Rechercher un aliment</h2>
+        <p class="muted">
+          La recherche essaie d’abord Open Food Facts pour beaucoup de produits, puis complète avec une base locale inspirée des tables d’aliments courants.
+        </p>
+        <div class="field">
+          <label for="query">Nom du produit / aliment</label>
+          <input id="query" placeholder="Ex : riz, pizza, chocolat, yaourt, couscous" />
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="qty">Quantité</label>
+            <input id="qty" type="number" min="0" step="1" value="100" />
+          </div>
+          <div class="field">
+            <label for="unit">Unité</label>
+            <select id="unit">
+              <option value="g">Grammes (g)</option>
+              <option value="portion">Portion</option>
+            </select>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" id="searchBtn">Chercher</button>
+          <button class="btn btn-secondary" id="calcBtn">Calculer</button>
+          <button class="btn btn-secondary" id="addMealBtn">Ajouter au repas</button>
+        </div>
+        <div class="source-box">
+          <span class="badge">Source</span>
+          <div class="meta" id="sourceText">Aucune recherche pour le moment.</div>
+        </div>
+        <div class="results">
+          <span class="badge">Résultat</span>
+          <div class="big" id="result">0 g</div>
+          <div class="meta" id="details">Choisis un aliment puis calcule.</div>
+        </div>
+        <div class="list" id="searchResults"></div>
+      </section>
+
+      <aside class="card">
+        <h2>Repas</h2>
+        <p class="muted">Additionne plusieurs aliments pour obtenir le total.</p>
+        <div class="list" id="mealList"></div>
+        <div class="meal-total">
+          <span class="badge">Total repas</span>
+          <div class="big" id="mealTotal">0 g</div>
+          <div class="meta" id="mealMeta">0 aliment ajouté</div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const localFoods = [
+      { name:'riz blanc cuit', carbsPer100g:28, aliases:['riz','riz cuit','riz blanc'] },
+      { name:'pâtes cuites', carbsPer100g:31, aliases:['pates','spaghetti','penne'] },
+      { name:'semoule cuite', carbsPer100g:23, aliases:['semoule'] },
+      { name:'couscous cuit', carbsPer100g:23, aliases:['couscous'] },
+      { name:'quinoa cuit', carbsPer100g:21, aliases:['quinoa'] },
+      { name:'lentilles cuites', carbsPer100g:20, aliases:['lentilles'] },
+      { name:'pois chiches cuits', carbsPer100g:27, aliases:['pois chiches'] },
+      { name:'haricots rouges cuits', carbsPer100g:22, aliases:['haricots rouges'] },
+      { name:'pommes de terre cuites', carbsPer100g:17, aliases:['pomme de terre','patate'] },
+      { name:'frites', carbsPer100g:35, aliases:['frite'] },
+      { name:'pain blanc', carbsPer100g:49, aliases:['pain'] },
+      { name:'baguette', carbsPer100g:56, aliases:['baguette pain'] },
+      { name:'pizza', carbsPer100g:33, carbsPerPortion:79, portionGrams:240 },
+      { name:'burger', carbsPer100g:22, carbsPerPortion:31, portionGrams:140 },
+      { name:'kebab', carbsPer100g:19, carbsPerPortion:54, portionGrams:280 },
+      { name:'tacos', carbsPer100g:25, carbsPerPortion:63, portionGrams:250 },
+      { name:'sushi', carbsPer100g:29, carbsPerPortion:36, portionGrams:120 },
+      { name:'lasagnes', carbsPer100g:18, carbsPerPortion:45, portionGrams:250 },
+      { name:'banane', carbsPer100g:23, carbsPerPortion:27, portionGrams:120 },
+      { name:'pomme', carbsPer100g:14, carbsPerPortion:21, portionGrams:150 },
+      { name:'orange', carbsPer100g:12, carbsPerPortion:15, portionGrams:130 },
+      { name:'lait demi-écrémé', carbsPer100g:5, carbsPerPortion:12, portionGrams:250 },
+      { name:'yaourt nature sucré', carbsPer100g:16, carbsPerPortion:20, portionGrams:125 },
+      { name:'céréales petit-déjeuner', carbsPer100g:74, aliases:['cereales','corn flakes','muesli'] },
+      { name:'avoine', carbsPer100g:58, aliases:['flocons avoine'] },
+      { name:'chocolat au lait', carbsPer100g:57, aliases:['chocolat'] },
+      { name:'glace vanille', carbsPer100g:24, carbsPerPortion:26, portionGrams:110 }
+    ];
+
+    const state = { selected:null, searchResults:[], meal:[] };
+    const $ = id => document.getElementById(id);
+    function norm(v){return (v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();}
+    function calculate(food, qty, unit){
+      if(!food || !qty || qty <= 0) return 0;
+      if(unit==='portion'){
+        if(food.carbsPerPortion!=null) return food.carbsPerPortion*qty;
+        if(food.portionGrams) return (food.carbsPer100g*food.portionGrams/100)*qty;
+      }
+      return (food.carbsPer100g*qty)/100;
+    }
+    function setSource(text, cls=''){
+      const el=$('sourceText');
+      el.className=`meta ${cls}`.trim();
+      el.textContent=text;
+    }
+    function searchLocal(query){
+      const q=norm(query);
+      return localFoods
+        .filter(f => [f.name,...(f.aliases||[])].map(norm).join(' ').includes(q))
+        .map(f => ({...f, source:'Base locale'}))
+        .slice(0,10);
+    }
+    async function searchOpenFoodFacts(query){
+      const url=`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=12&fields=product_name,brands,nutriments,serving_size`;
+      const res=await fetch(url,{headers:{'Accept':'application/json'}});
+      if(!res.ok) throw new Error('Recherche impossible');
+      const data=await res.json();
+      return (Array.isArray(data.products)?data.products:[]).map(p=>{
+        const carbs100=p?.nutriments?.carbohydrates_100g;
+        if(carbs100==null || Number.isNaN(Number(carbs100))) return null;
+        const servingText=p.serving_size||''; let portionGrams;
+        const m=/([0-9]+([.,][0-9]+)?)\s*g/i.exec(servingText); if(m) portionGrams=Number(m[1].replace(',', '.'));
+        return {
+          name:p.product_name||'Produit sans nom',
+          brand:p.brands||'',
+          carbsPer100g:Number(carbs100),
+          carbsPerPortion:portionGrams ? Number(carbs100)*portionGrams/100 : undefined,
+          portionGrams,
+          source:'Open Food Facts'
+        };
+      }).filter(Boolean).slice(0,8);
+    }
+    function renderSearchResults(){
+      const box=$('searchResults');
+      if(!state.searchResults.length){ box.innerHTML=''; return; }
+      box.innerHTML=state.searchResults.map((food,i)=>`
+        <button class="search-item" data-select="${i}">
+          <div>
+            <strong>${food.name}</strong>
+            <div class="meta">
+              ${food.brand ? food.brand + ' · ' : ''}${food.carbsPer100g} g / 100 g${food.carbsPerPortion ? ` · ${food.carbsPerPortion.toFixed(1).replace('.0','')} g / portion` : ''}
+            </div>
+          </div>
+          <span class="badge">${food.source}</span>
+        </button>
+      `).join('');
+    }
+    function renderResult(){
+      const qty=Number($('qty').value);
+      const unit=$('unit').value;
+      if(!state.selected){
+        $('result').textContent='0 g';
+        $('details').textContent='Aucun aliment sélectionné.';
+        return;
+      }
+      const total=calculate(state.selected,qty,unit);
+      $('result').textContent=`${total.toFixed(1).replace('.0','')} g`;
+      $('details').textContent=`${state.selected.name} · ${qty} ${unit==='g'?'g':qty>1?'portions':'portion'} · ${state.selected.carbsPer100g} g / 100 g`;
+    }
+    function renderMeal(){
+      const list=$('mealList');
+      if(!state.meal.length){
+        list.innerHTML='<p class="meta">Aucun aliment ajouté.</p>';
+      } else {
+        list.innerHTML=state.meal.map((item,i)=>`
+          <div class="item">
+            <div>
+              <strong>${item.name}</strong>
+              <div class="meta">${item.qty} ${item.unit==='g'?'g':item.qty>1?'portions':'portion'} · ${item.source}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:.75rem;">
+              <strong>${item.carbs.toFixed(1).replace('.0','')} g</strong>
+              <button class="btn btn-secondary" data-remove="${i}" style="min-height:auto;padding:.45rem .7rem;">✕</button>
+            </div>
+          </div>
+        `).join('');
+      }
+      const total=state.meal.reduce((s,x)=>s+x.carbs,0);
+      $('mealTotal').textContent=`${total.toFixed(1).replace('.0','')} g`;
+      $('mealMeta').textContent=`${state.meal.length} aliment${state.meal.length>1?'s':''} ajouté${state.meal.length>1?'s':''}`;
+    }
+    async function runSearch(){
+      const query=$('query').value.trim();
+      if(!query) return;
+      $('searchResults').innerHTML='<p class="meta">Recherche en cours…</p>';
+      try {
+        const online=await searchOpenFoodFacts(query);
+        const local=searchLocal(query);
+        const seen=new Set();
+        state.searchResults=[...online,...local].filter(item=>{
+          const key=norm(item.name+' '+(item.brand||''));
+          if(seen.has(key)) return false;
+          seen.add(key); return true;
+        }).slice(0,10);
+        if(state.searchResults.length){
+          state.selected=state.searchResults[0];
+          setSource(`Résultats trouvés dans ${online.length ? 'Open Food Facts' : 'la base locale'}${online.length && local.length ? ' et la base locale' : ''}.`, 'ok');
+        } else {
+          state.selected=null;
+          setSource('Aucun résultat trouvé pour cette recherche.', 'danger');
+        }
+        renderSearchResults();
+        renderResult();
+      } catch(e){
+        state.searchResults=searchLocal(query);
+        state.selected=state.searchResults[0]||null;
+        setSource('Recherche en ligne indisponible, base locale utilisée.', 'danger');
+        renderSearchResults();
+        renderResult();
+      }
+    }
+    document.addEventListener('click', e=>{
+      const select=e.target.closest('[data-select]');
+      const remove=e.target.closest('[data-remove]');
+      if(select){
+        state.selected=state.searchResults[Number(select.dataset.select)];
+        renderResult();
+      }
+      if(remove){
+        state.meal.splice(Number(remove.dataset.remove),1);
+        renderMeal();
+      }
+    });
+    $('searchBtn').addEventListener('click', runSearch);
+    $('calcBtn').addEventListener('click', renderResult);
+    $('addMealBtn').addEventListener('click', ()=>{
+      if(!state.selected) return;
+      const qty=Number($('qty').value), unit=$('unit').value, carbs=calculate(state.selected,qty,unit);
+      state.meal.push({name:state.selected.name, qty, unit, carbs, source:state.selected.source});
+      renderMeal();
+    });
+    $('qty').addEventListener('input', renderResult);
+    $('unit').addEventListener('change', renderResult);
+    $('query').addEventListener('keydown', e=>{ if(e.key==='Enter') runSearch(); });
+
+    let theme=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+    document.documentElement.setAttribute('data-theme',theme);
+    $('themeBtn').textContent=theme==='dark'?'☀️':'🌙';
+    $('themeBtn').addEventListener('click',()=>{
+      theme=theme==='dark'?'light':'dark';
+      document.documentElement.setAttribute('data-theme',theme);
+      $('themeBtn').textContent=theme==='dark'?'☀️':'🌙';
+    });
+
+    if('serviceWorker' in navigator){
+      window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
+    }
+    renderMeal();
+  </script>
 </body>
 </html>
